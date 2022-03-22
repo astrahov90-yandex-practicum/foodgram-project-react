@@ -1,7 +1,9 @@
+from rest_framework import serializers
+
 from recipes.models import (Favorite, Ingredient, IngredientsRecipe, Recipe,
                             Shopcart, Tag)
-from rest_framework import serializers
 from users.serializers import UserSerializer
+
 from .fields import Base64ImageField
 from .service import fill_recipe
 
@@ -134,7 +136,6 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
 
         super().update(instance, validated_data)
-        instance.save()
 
         fill_recipe(instance, ingredients, tags)
         return instance

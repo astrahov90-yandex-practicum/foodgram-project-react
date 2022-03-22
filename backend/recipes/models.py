@@ -1,5 +1,7 @@
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import UniqueConstraint
+
 from users.models import User
 
 
@@ -120,7 +122,12 @@ class IngredientsRecipe(models.Model):
 
     class Meta:
         ordering = ['ingredient']
-        unique_together = ('recipe', 'ingredient',)
+        constraints = [
+            UniqueConstraint(
+                fields=['recipe', 'ingredient'],
+                name='unique_recipe_ingredient'
+                )
+            ]
 
     def __str__(self) -> str:
         measurement_unit = self.ingredient.measurement_unit
@@ -143,7 +150,12 @@ class Favorite(models.Model):
 
     class Meta:
         ordering = ['-recipe__created_date']
-        unique_together = ('user', 'recipe',)
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_favorite'
+                )
+            ]
 
     def __str__(self) -> str:
         return ', '.join([r.name for r in self.recipe])
@@ -165,7 +177,12 @@ class Shopcart(models.Model):
 
     class Meta:
         ordering = ['-recipe__created_date']
-        unique_together = ('user', 'recipe',)
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'recipe'],
+                name='unique_shopcart'
+                )
+            ]
 
     def __str__(self) -> str:
         return ', '.join([r.name for r in self.recipe])

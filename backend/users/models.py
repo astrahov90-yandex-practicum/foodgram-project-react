@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import RegexValidator
 from django.db import models
+from django.db.models import UniqueConstraint
 
 
 class User(AbstractUser):
@@ -66,7 +67,12 @@ class Follow(models.Model):
 
     class Meta:
         ordering = ['author']
-        unique_together = ('user', 'author',)
+        constraints = [
+            UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_follow'
+                )
+            ]
 
     def __str__(self) -> str:
         return self.author.username
