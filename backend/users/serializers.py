@@ -1,7 +1,5 @@
-from rest_framework import serializers
-
 from recipes.models import Recipe
-
+from rest_framework import serializers
 from .models import Follow, User
 
 
@@ -14,7 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
     is_subscribed = serializers.SerializerMethodField('get_is_subscribed')
 
     def get_is_subscribed(self, author):
-        "Метод возвращает, подписан ли текущий пользователь на author"""
+        """
+        Метод возвращает, подписан ли текущий пользователь на author.
+        """
         current_user = self.context['request'].user
         if current_user.is_authenticated:
             return author.follower.filter(user=current_user).exists()

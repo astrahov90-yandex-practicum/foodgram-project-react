@@ -1,20 +1,17 @@
 from django.db.models import Sum
-from django.shortcuts import get_object_or_404
 from django_filters import rest_framework as filters
+from recipes.models import Ingredient, IngredientsRecipe, Recipe, Tag
 from rest_framework import mixins, status, viewsets
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
-
-from recipes.models import Ingredient, IngredientsList, Recipe, Tag
-
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageNumberPagination
 from .permissions import IsRecipeOwnerOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, RecipeSerializerPost,
                           ShopSerializerPost, TagSerializer)
+from .service import subscribe_delete, subscribe_post
 
 
 class TagViewSet(mixins.ListModelMixin,
@@ -78,26 +75,23 @@ class FavouriteViewSet(APIView):
     pagination_class = PageNumberPagination
 
     def post(self, request, recipe_id):
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-        if request.user.fav_recipes.filter(recipe=recipe).exists():
-            raise ValidationError('Рецепт уже в избранном')
-        data = {'user': request.user.pk,
-                'recipe': recipe.pk}
-        serializer = FavoriteSerializer(data=data)
-        if serializer.is_valid():
-            serializer.save(user=request.user, recipe=recipe)
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return subscribe_post(
+            self,
+            request,
+            recipe_id,
+            FavoriteSerializer,
+            'fav_recipes',
+            'Рецепт уже в избранном'
+            )
 
     def delete(self, request, recipe_id):
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-
-        instance = request.user.fav_recipes.filter(recipe=recipe)
-        if not instance.exists():
-            return Response(data='Рецепт не в избранном',
-                            status=status.HTTP_400_BAD_REQUEST)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return subscribe_delete(
+            self,
+            request,
+            recipe_id,
+            'fav_recipes',
+            'Рецепт не в избранном'
+            )
 
 
 class ShopViewSet(APIView):
@@ -108,14 +102,13 @@ class ShopViewSet(APIView):
     serializer_class = ShopSerializerPost
 
     def get(self, request):
-        recipes = request.user.shoplist_recipes.select_related('recipe').all()
-        recipes = [recipe.recipe for recipe in recipes]
-        ingredients = IngredientsList.objects.filter(recipe__in=recipes)
-        ingredients_aggr = ingredients.annotate(sum_amount=Sum('amount'))
+        recipes_id = request.user.shoplist_recipes.values_list('recipe__id')
+        ingredients = IngredientsRecipe.objects.filter(recipe__in=recipes_id)
+        ingredients = ingredients.annotate(sum_amount=Sum('amount'))
         data = []
         data.append('Список ваших покупок')
         data.append('Ингредиент (ед.) - кол-во')
-        for ing in ingredients_aggr:
+        for ing in ingredients:
             ing_name = ing.ingredient.name
             ing_init = ing.ingredient.measurement_unit
             data.append(f'• {ing_name} ({ing_init}) - {ing.sum_amount}')
@@ -125,23 +118,20 @@ class ShopViewSet(APIView):
             content_type='text/plain')
 
     def post(self, request, recipe_id):
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-        if request.user.shoplist_recipes.filter(recipe=recipe).exists():
-            raise ValidationError('Рецепт уже в корзине')
-        data = {'user': request.user.pk,
-                'recipe': recipe.pk}
-        serializer = ShopSerializerPost(data=data)
-        if serializer.is_valid():
-            serializer.save(user=request.user, recipe=recipe)
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return subscribe_post(
+            self,
+            request,
+            recipe_id,
+            ShopSerializerPost,
+            'shoplist_recipes',
+            'Рецепт уже в корзине'
+            )
 
     def delete(self, request, recipe_id):
-        recipe = get_object_or_404(Recipe, pk=recipe_id)
-
-        instance = request.user.shoplist_recipes.filter(recipe=recipe)
-        if not instance.exists():
-            return Response(data='Рецепт не в корзине',
-                            status=status.HTTP_400_BAD_REQUEST)
-        instance.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return subscribe_delete(
+            self,
+            request,
+            recipe_id,
+            'shoplist_recipes',
+            'Рецепт не в корзине'
+            )

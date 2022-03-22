@@ -11,11 +11,13 @@ router_v1.register(r'users/(?P<user_id>\d+)/subscribe', FollowViewSet,
                    basename='follow')
 
 urlpatterns = [
-    path('users/subscriptions/', FollowViewSet.as_view({'get': 'list'})),
-    path(r'users/(?P<user_id>\d+)/subscribe/', FollowViewSet.as_view(
-        {'post': 'create',
-         'delete': 'destroy'})),
-    path('users/set_password/', ChangePasswordView.as_view(
-        {'post': 'partial_update'})),
+    path(
+        'users/subscriptions/',
+        FollowViewSet.as_view({'get': 'list'}),
+        name='follow'),
+    path(
+        'users/set_password/',
+        ChangePasswordView.as_view({'post': 'partial_update'}),
+        name='password_update'),
     path('', include(router_v1.urls)),
 ]

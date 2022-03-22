@@ -1,11 +1,17 @@
 from django.contrib import admin
 
-from .models import (Favourites, Ingredient, IngredientsList, Recipe, Shoplist,
-                     Tag)
+from .models import (
+    Favorite,
+    Ingredient,
+    IngredientsRecipe,
+    Recipe,
+    Shopcart,
+    Tag
+    )
 
 
 class CustomIngredientsListAdmin(admin.TabularInline):
-    model = IngredientsList
+    model = IngredientsRecipe
     extra = 1
 
 
@@ -31,7 +37,7 @@ class FavoriteAdmin(admin.ModelAdmin):
     ]
 
 
-class ShopAdmin(admin.ModelAdmin):
+class ShopcartAdmin(admin.ModelAdmin):
     list_display = ('user', 'recipe',)
     fieldsets = [
         (None, {'fields': ['user', 'recipe']}),
@@ -55,6 +61,6 @@ admin.site.register(Recipe, CustomRecipeAdmin)
 
 admin.site.register(Tag)
 
-admin.site.register(Favourites, FavoriteAdmin)
+admin.site.register(Favorite, FavoriteAdmin)
 
-admin.site.register(Shoplist, ShopAdmin)
+admin.site.register(Shopcart, ShopcartAdmin)

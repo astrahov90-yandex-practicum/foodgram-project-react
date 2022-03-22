@@ -90,23 +90,22 @@ class ChangePasswordView(mixins.UpdateModelMixin,
         self.object = self.get_object()
         serializer = self.get_serializer(data=request.data)
 
-        if serializer.is_valid():
-            current_password = serializer.data.get('current_password')
-            if not self.object.check_password(current_password):
-                return Response({'current_password': ['Некорректный пароль.']},
-                                status=status.HTTP_400_BAD_REQUEST)
-            self.object.set_password(serializer.data.get("new_password"))
-            self.object.save()
-            response = {
-                'status': 'Успешно',
-                'code': status.HTTP_204_NO_CONTENT,
-                'message': 'Пароль успешно изменен',
-                'data': []
-            }
+        serializer.is_valid(raiseExceptions=True)
 
-            return Response(response)
+        current_password = serializer.data.get('current_password')
+        if not self.object.check_password(current_password):
+            return Response({'current_password': ['Некорректный пароль.']},
+                            status=status.HTTP_400_BAD_REQUEST)
+        self.object.set_password(serializer.data.get('new_password'))
+        self.object.save()
+        response = {
+            'status': 'Успешно',
+            'code': status.HTTP_204_NO_CONTENT,
+            'message': 'Пароль успешно изменен',
+            'data': []
+        }
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(response)
 
 
 class FollowViewSet(mixins.ListModelMixin,

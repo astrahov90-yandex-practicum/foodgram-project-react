@@ -23,8 +23,20 @@ router.register('recipes',
 
 
 urlpatterns = [
-    path(r'recipes/<recipe_id>/favorite/', FavouriteViewSet.as_view()),
-    path(r'recipes/download_shopping_cart/', ShopViewSet.as_view()),
-    path(r'recipes/<recipe_id>/shopping_cart/', ShopViewSet.as_view()),
+    path(
+        r'recipes/<int:recipe_id>/favorite/',
+        FavouriteViewSet.as_view(),
+        name='favorite'
+        ),
+    path(
+        r'recipes/download_shopping_cart/',
+        ShopViewSet.as_view(),
+        name='download_cart'
+        ),
+    path(
+        r'recipes/<int:recipe_id>/shopping_cart/',
+        ShopViewSet.as_view(),
+        name='cart'
+        ),
     path('', include(router.urls)),
 ]

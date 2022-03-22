@@ -1,10 +1,9 @@
+from recipes.models import (Favorite, Ingredient, IngredientsRecipe, Recipe,
+                            Shopcart, Tag)
 from rest_framework import serializers
-
-from recipes.models import (Favourites, Ingredient, IngredientsList, Recipe,
-                            Shoplist, Tag)
 from users.serializers import UserSerializer
-
 from .fields import Base64ImageField
+from .service import fill_recipe
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -27,7 +26,7 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class IngredientListSerializer(serializers.ModelSerializer):
+class IngredientRecipeSerializer(serializers.ModelSerializer):
     """
     Сериализатор модели списка ингредиентов.
     """
@@ -44,7 +43,7 @@ class IngredientListSerializer(serializers.ModelSerializer):
     amount = serializers.FloatField()
 
     class Meta:
-        model = IngredientsList
+        model = IngredientsRecipe
 
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
@@ -56,7 +55,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = TagSerializer(many=True)
-    ingredients = IngredientListSerializer(
+    ingredients = IngredientRecipeSerializer(
         source='recipe_ingredients', many=True
     )
     is_favorited = serializers.SerializerMethodField()
@@ -98,7 +97,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(many=True, queryset=Tag.objects)
-    ingredients = IngredientListSerializer(
+    ingredients = IngredientRecipeSerializer(
         source='recipe_ingredients',
         many=True)
     image = Base64ImageField(max_length=None, use_url=True,)
@@ -127,28 +126,17 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
 
         recipe = Recipe.objects.create(**validated_data)
-        recipe.tags.set(tags)
-
-        for ingredient in ingredients:
-            IngredientsList.objects.create(
-                ingredient=ingredient['ingredient'],
-                recipe=recipe,
-                amount=ingredient['amount'])
-
+        fill_recipe(recipe, ingredients, tags)
         return recipe
 
     def update(self, instance, validated_data):
         ingredients = validated_data.pop('recipe_ingredients')
         tags = validated_data.pop('tags')
-        for attr, value in validated_data.items():
-            setattr(instance, attr, value)
+
+        super().update(instance, validated_data)
         instance.save()
-        instance.tags.set(tags)
-        instance.recipe_ingredients.all().delete()
-        for ingredient in ingredients:
-            IngredientsList.objects.create(
-                recipe=instance, ingredient=ingredient['ingredient'],
-                amount=ingredient['amount'])
+
+        fill_recipe(instance, ingredients, tags)
         return instance
 
 
@@ -160,7 +148,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
     recipes = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
-        model = Favourites
+        model = Favorite
 
         fields = ('user',
                   'recipe',)
@@ -179,7 +167,7 @@ class ShopSerializerPost(serializers.ModelSerializer):
     """
 
     class Meta:
-        model = Shoplist
+        model = Shopcart
 
         fields = ('user',
                   'recipe',)

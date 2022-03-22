@@ -1,6 +1,5 @@
 from django.core.validators import MinValueValidator
 from django.db import models
-
 from users.models import User
 
 
@@ -34,12 +33,10 @@ class Ingredient(models.Model):
     """
     name = models.CharField(
         verbose_name='Наименование',
-        max_length=200,
-        unique=False)
+        max_length=200)
     measurement_unit = models.CharField(
         verbose_name='Единица измерения',
-        max_length=200,
-        unique=False)
+        max_length=200)
 
     class Meta:
         ordering = ['name']
@@ -54,7 +51,7 @@ class Recipe(models.Model):
     """
     tags = models.ManyToManyField(
         Tag,
-        verbose_name='Тег')
+        verbose_name='Теги')
 
     author = models.ForeignKey(
         User,
@@ -89,7 +86,10 @@ class Recipe(models.Model):
         verbose_name='Дата добавления рецепта',
     )
 
-    ingredients = models.ManyToManyField(Ingredient, through='IngredientsList')
+    ingredients = models.ManyToManyField(
+        Ingredient,
+        through='IngredientsRecipe'
+        )
 
     class Meta:
         ordering = ['-created_date']
@@ -98,7 +98,7 @@ class Recipe(models.Model):
         return self.name
 
 
-class IngredientsList(models.Model):
+class IngredientsRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -118,15 +118,16 @@ class IngredientsList(models.Model):
         verbose_name='Количество',
         help_text='Содержит количество ингредиентов')
 
+    class Meta:
+        ordering = ['ingredient']
+        unique_together = ('recipe', 'ingredient',)
+
     def __str__(self) -> str:
         measurement_unit = self.ingredient.measurement_unit
         return f'{self.ingredient.name} ({self.amount}) - {measurement_unit}'
 
-    class Meta:
-        ordering = ['ingredient']
 
-
-class Favourites(models.Model):
+class Favorite(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -140,14 +141,15 @@ class Favourites(models.Model):
         verbose_name='Рецепт',
         help_text='Содержит рецепт')
 
+    class Meta:
+        ordering = ['-recipe__created_date']
+        unique_together = ('user', 'recipe',)
+
     def __str__(self) -> str:
         return ', '.join([r.name for r in self.recipe])
 
-    class Meta:
-        ordering = ['-recipe__created_date']
 
-
-class Shoplist(models.Model):
+class Shopcart(models.Model):
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -161,8 +163,9 @@ class Shoplist(models.Model):
         verbose_name='Рецепт',
         help_text='Содержит рецепт')
 
-    def __str__(self) -> str:
-        return ', '.join([r.name for r in self.recipe])
-
     class Meta:
         ordering = ['-recipe__created_date']
+        unique_together = ('user', 'recipe',)
+
+    def __str__(self) -> str:
+        return ', '.join([r.name for r in self.recipe])

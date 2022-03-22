@@ -64,8 +64,9 @@ class Follow(models.Model):
         verbose_name='Автор подписки',
         help_text='Содержит автора подписки')
 
-    def __str__(self) -> str:
-        return self.author.username
-
     class Meta:
         ordering = ['author']
+        unique_together = ('user', 'author',)
+
+    def __str__(self) -> str:
+        return self.author.username
