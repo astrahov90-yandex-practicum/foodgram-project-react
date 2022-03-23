@@ -5,7 +5,6 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from recipes.models import Ingredient, IngredientsRecipe, Recipe, Tag
 from .filters import IngredientFilter, RecipeFilter
 from .paginators import PageNumberPagination
 from .permissions import IsRecipeOwnerOrReadOnly
@@ -13,6 +12,7 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, RecipeSerializerPost,
                           ShopSerializerPost, TagSerializer)
 from .service import subscribe_delete, subscribe_post
+from recipes.models import Ingredient, IngredientsRecipe, Recipe, Tag
 
 
 class TagViewSet(mixins.ListModelMixin,
