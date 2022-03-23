@@ -39,7 +39,7 @@ jobs:
           script: |
             sudo docker-compose stop
             sudo docker-compose rm web
-            sudo docker-compose pull astrahov90/foodgram-project-react:latest
+            sudo docker pull astrahov90/foodgram-project-react:latest
             touch .env
             echo SECRET_KEY=${{ secrets.SECRET_KEY }} >> .env
             echo DB_ENGINE=${{ secrets.DB_ENGINE }} >> .env
