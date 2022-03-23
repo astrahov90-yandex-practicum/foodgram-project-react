@@ -17,11 +17,6 @@ services:
       - db
     env_file:
       - ./.env
-  frontend:
-    image: astrahov90/foodgram-project-react-frontend:latest
-    restart: always
-    volumes:
-      - frontend:/app/result_build/ 
   nginx:
     image: nginx:1.21.3-alpine
 
@@ -37,9 +32,7 @@ services:
 
     depends_on:
       - web
-      - frontend
 
 volumes:
   static_value:
   media_value:
-  frontend:
