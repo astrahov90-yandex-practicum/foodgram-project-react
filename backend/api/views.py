@@ -62,6 +62,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return RecipeSerializerPost
         return RecipeSerializer
 
+    def get_queryset(self):
+        return self.filterset_class.favorite_and_shopping_cart(self.request)
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 

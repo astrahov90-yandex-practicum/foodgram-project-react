@@ -1,11 +1,11 @@
 from django.shortcuts import get_object_or_404
 from rest_framework import filters, mixins, status, viewsets
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 from rest_framework.views import APIView
-from rest_framework_simplejwt.tokens import AccessToken
 
 from .models import Follow, User
 from .serializers import (AccessTokenSerializer, ChangePasswordSerializer,
@@ -23,24 +23,21 @@ class AccessTokenView(APIView):
         serializer = AccessTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        username = serializer.validated_data['username']
-        user = get_object_or_404(User, username=username)
+        email = serializer.validated_data['email']
+        user = get_object_or_404(User, email=email)
 
         password = serializer.validated_data['password']
-        if user.password != password:
+        if not user.check_password(password):
             return Response(
-                {'confirmation_code': 'Неверный пароль'},
+                {'password': 'Неверный пароль'},
                 status=status.HTTP_400_BAD_REQUEST
             )
-        return Response(self.get_token(user), status=status.HTTP_200_OK)
-
-    def get_token(self, user):
-        return {
-            'token': str(AccessToken.for_user(user))
-        }
+        token, created = Token.objects.get_or_create(user=user)
+        return Response({'auth_token': token.key}, status=status.HTTP_200_OK)
 
 
 class UsersViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
                    mixins.RetrieveModelMixin,
                    viewsets.GenericViewSet):
     """
@@ -117,14 +114,13 @@ class FollowViewSet(mixins.ListModelMixin,
     """
     serializer_class = FollowSerializer
     permission_classes = [IsAuthenticated, ]
-    pagination_class = None
 
     model = Follow
     filter_backends = (filters.SearchFilter,)
     search_fields = ('following__username',)
 
     def get_queryset(self):
-        return self.request.user.follower
+        return self.request.user.follower.all()
 
     def create(self, request, *args, **kwargs):
         author_id = self.kwargs.get('user_id')

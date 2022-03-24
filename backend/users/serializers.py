@@ -22,8 +22,10 @@ class UserSerializer(serializers.ModelSerializer):
         return False
 
     class Meta:
+        extra_kwargs = {'password': {'write_only': True}}
         fields = (
             'email',
+            'password',
             'id',
             'username',
             'first_name',
@@ -42,7 +44,7 @@ class AccessTokenSerializer(serializers.Serializer):
     """
     Сериализатор для получения токена.
     """
-    username = serializers.CharField(required=True)
+    email = serializers.CharField(required=True)
     password = serializers.CharField(required=True)
 
 

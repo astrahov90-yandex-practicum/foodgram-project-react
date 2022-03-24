@@ -1,7 +1,9 @@
 import base64
 import uuid
+import os
 
 from django.core.files.base import ContentFile
+from django.conf import settings
 from rest_framework import serializers
 
 import six
@@ -46,3 +48,16 @@ class Base64ImageField(serializers.ImageField):
         extension = 'jpg' if extension == 'jpeg' else extension
 
         return extension
+
+    def to_representation(self, value):
+
+        format = 'png'
+        image_file = settings.MEDIA_ROOT + value.path
+
+        if not os.path.isfile(image_file):
+            return None
+
+        encoded_string = ''
+        with open(image_file, 'rb') as img_f:
+            encoded_string = base64.b64encode(img_f.read())
+        return 'data:image/%s;base64,%s' % (format, encoded_string)
