@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .filters import IngredientFilter, RecipeFilter
-from .paginators import PageNumberPagination
+from .paginators import StandardResultsSetPagination
 from .permissions import IsRecipeOwnerOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeSerializer, RecipeSerializerPost,
@@ -55,7 +55,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     filterset_class = RecipeFilter
 
     permission_classes = [IsRecipeOwnerOrReadOnly]
-    pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -68,6 +68,35 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        serializer = RecipeSerializer(
+            instance=serializer.instance,
+            context={'request': self.request}
+        )
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=partial
+        )
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        serializer = RecipeSerializer(
+            instance=serializer.instance,
+            context={'request': self.request},
+        )
+        return Response(
+            serializer.data, status=status.HTTP_200_OK
+        )
+
 
 class FavouriteViewSet(APIView):
     """
@@ -76,7 +105,7 @@ class FavouriteViewSet(APIView):
     permission_classes = [IsAuthenticated, ]
     serializer_class = RecipeSerializer
     filter_backends = (filters.DjangoFilterBackend,)
-    pagination_class = PageNumberPagination
+    pagination_class = StandardResultsSetPagination
 
     def post(self, request, recipe_id):
         return subscribe_post(

@@ -1,5 +1,6 @@
 from django.core.validators import MinValueValidator
 from rest_framework import serializers
+from rest_framework.serializers import ValidationError
 
 from .fields import Base64ImageField
 from .service import fill_recipe
@@ -148,6 +149,7 @@ class RecipeSerializerPost(serializers.ModelSerializer):
 
         recipe = Recipe.objects.create(**validated_data)
         fill_recipe(recipe, ingredients, tags)
+
         return recipe
 
     def update(self, instance, validated_data):
@@ -155,9 +157,20 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         tags = validated_data.pop('tags')
 
         super().update(instance, validated_data)
-
         fill_recipe(instance, ingredients, tags)
+
         return instance
+
+    def validate(self, attrs):
+        unique_ingredients = set()
+        for ingredient in attrs['recipe_ingredients']:
+            if ingredient['ingredient'] in unique_ingredients:
+                raise ValidationError(
+                    'Ингредиенты в рецепте не должны повторяться'
+                    )
+
+            unique_ingredients.add(ingredient['ingredient'])
+        return attrs
 
 
 class FavoriteSerializer(serializers.ModelSerializer):

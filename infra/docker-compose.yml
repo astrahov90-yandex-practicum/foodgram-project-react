@@ -7,14 +7,6 @@ services:
       - /var/lib/postgresql/data/
     env_file:
       - ./.env
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    volumes:
-      - ./frontend/:/app/result_build/
-    depends_on:
-      - db
   web:
     image: astrahov90/foodgram-project-react:latest
     restart: always
@@ -25,6 +17,14 @@ services:
       - db
     env_file:
       - ./.env
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend/:/app/result_build/
+    depends_on:
+      - web
   nginx:
     image: nginx:1.21.3-alpine 
 
@@ -41,7 +41,6 @@ services:
       - ./docs:/usr/share/nginx/html/api/docs/
 
     depends_on:
-      - web
       - frontend
 
 volumes:
