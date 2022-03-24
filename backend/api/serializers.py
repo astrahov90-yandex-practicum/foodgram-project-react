@@ -1,3 +1,4 @@
+from django.core.validators import MinValueValidator
 from rest_framework import serializers
 
 from .fields import Base64ImageField
@@ -41,7 +42,9 @@ class IngredientRecipeSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.StringRelatedField(
         source='ingredient.measurement_unit',
         read_only=True)
-    amount = serializers.FloatField()
+    amount = serializers.FloatField(
+        validators=[MinValueValidator(0.001)],
+        )
 
     class Meta:
         model = IngredientsRecipe
@@ -116,6 +119,9 @@ class RecipeSerializerPost(serializers.ModelSerializer):
         source='recipe_ingredients',
         many=True)
     image = Base64ImageField(max_length=None, use_url=False,)
+    cooking_time = serializers.IntegerField(
+        validators=[MinValueValidator(1)],
+        )
 
     class Meta:
         model = Recipe

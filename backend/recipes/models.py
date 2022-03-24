@@ -122,12 +122,6 @@ class IngredientsRecipe(models.Model):
 
     class Meta:
         ordering = ['ingredient']
-        constraints = [
-            UniqueConstraint(
-                fields=['recipe', 'ingredient'],
-                name='unique_recipe_ingredient'
-                )
-            ]
 
     def __str__(self) -> str:
         measurement_unit = self.ingredient.measurement_unit

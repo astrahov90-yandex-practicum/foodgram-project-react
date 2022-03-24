@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         """
         current_user = self.context['request'].user
         if current_user.is_authenticated:
-            return author.follower.filter(user=current_user).exists()
+            return author.following.filter(user=current_user).exists()
         return False
 
     class Meta:
@@ -84,11 +84,8 @@ class FollowSerializer(serializers.ModelSerializer):
     last_name = serializers.ReadOnlyField(source='author.last_name')
 
     is_subscribed = serializers.SerializerMethodField()
-    recipes = serializers.SerializerMethodField()
 
-    recipes = FollowRecipeSerializer(source='author.recipes',
-                                     read_only=True,
-                                     many=True)
+    recipes = serializers.SerializerMethodField()
 
     recipes_count = serializers.SerializerMethodField()
 
@@ -108,3 +105,11 @@ class FollowSerializer(serializers.ModelSerializer):
 
     def get_recipes_count(self, obj):
         return obj.author.recipes.count()
+
+    def get_recipes(self, obj):
+        RECIPES_LIMIT = 3
+        query_params = self.context['request'].query_params
+        if query_params.get('recipes_limit'):
+            RECIPES_LIMIT = int(query_params.get('recipes_limit'))
+        recipes = obj.author.recipes.all()[:RECIPES_LIMIT]
+        return FollowRecipeSerializer(recipes, many=True).data

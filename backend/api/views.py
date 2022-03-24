@@ -108,14 +108,19 @@ class ShopViewSet(APIView):
     def get(self, request):
         recipes_id = request.user.shoplist_recipes.values_list('recipe__id')
         ingredients = IngredientsRecipe.objects.filter(recipe__in=recipes_id)
+        ingredients = ingredients.values(
+            'ingredient',
+            'ingredient__name',
+            'ingredient__measurement_unit'
+            )
         ingredients = ingredients.annotate(sum_amount=Sum('amount'))
         data = []
         data.append('Список ваших покупок')
         data.append('Ингредиент (ед.) - кол-во')
         for ing in ingredients:
-            ing_name = ing.ingredient.name
-            ing_init = ing.ingredient.measurement_unit
-            data.append(f'• {ing_name} ({ing_init}) - {ing.sum_amount}')
+            ing_name = ing.get("ingredient__name")
+            ing_unit = ing.get("ingredient__measurement_unit")
+            data.append(f'• {ing_name} ({ing_unit}) - {ing.get("sum_amount")}')
         return Response(
             '\r\n'.join(data),
             status=status.HTTP_200_OK,

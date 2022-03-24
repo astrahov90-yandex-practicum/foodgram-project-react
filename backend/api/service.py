@@ -13,6 +13,7 @@ def fill_recipe(instance, ingredients, tags):
     """
 
     instance.tags.set(tags)
+    instance.recipe_ingredients.all().delete()
 
     for ingredient in ingredients:
         IngredientsRecipe.objects.create(

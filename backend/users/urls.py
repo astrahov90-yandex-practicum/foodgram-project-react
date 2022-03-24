@@ -12,9 +12,9 @@ from .views import (
 app_name = 'users'
 
 router_v1 = DefaultRouter()
-router_v1.register('users', UsersViewSet, basename='users')
 router_v1.register(r'users/(?P<user_id>\d+)/subscribe', FollowViewSet,
                    basename='follow')
+router_v1.register('users', UsersViewSet, basename='users')
 
 urlpatterns = [
     path('auth/token/login/', AccessTokenView.as_view(), name='token'),

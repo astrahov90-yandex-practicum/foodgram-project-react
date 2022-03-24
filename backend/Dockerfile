@@ -3,7 +3,6 @@ FROM python:3.7-slim
 WORKDIR /app
 
 COPY requirements.txt requirements.txt
-COPY ingredients.csv ingredients.csv
 
 RUN pip3 install -r requirements.txt --no-cache-dir
 

@@ -46,8 +46,6 @@ class UsersViewSet(mixins.ListModelMixin,
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    lookup_field = 'username'
-
     permission_classes = [AllowAny, ]
 
     filter_backends = (filters.SearchFilter, )
