@@ -91,6 +91,20 @@ class RecipeSerializer(serializers.ModelSerializer):
         return buyer.exists()
 
 
+class RecipeSerializerShort(serializers.ModelSerializer):
+    """
+    Сериализатор модели рецептов сокращенный.
+    """
+
+    class Meta:
+        model = Recipe
+
+        fields = ('id',
+                  'name',
+                  'image',
+                  'cooking_time',)
+
+
 class RecipeSerializerPost(serializers.ModelSerializer):
     """
     Сериализатор модели рецептов. Операции записи.
@@ -151,7 +165,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         model = Favorite
 
         fields = ('user',
-                  'recipe',)
+                  'recipes',)
 
     def get_recipes(self, obj):
         params = self.context['request'].query_params

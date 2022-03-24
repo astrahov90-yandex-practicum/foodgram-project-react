@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.serializers import ValidationError
 
 from recipes.models import IngredientsRecipe, Recipe
+from . import serializers
 
 
 def fill_recipe(instance, ingredients, tags):
@@ -35,7 +36,8 @@ def subscribe_post(self, request, recipe_id, serializer, inner_tag, error_msg):
     serializer = serializer(data=data)
     if serializer.is_valid():
         serializer.save(user=request.user, recipe=recipe)
-        return Response(status=status.HTTP_201_CREATED)
+        model = serializers.RecipeSerializerShort(instance=recipe)
+        return Response(data=model.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
